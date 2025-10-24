@@ -4,7 +4,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Servicios Pro</title>
+  <title>You Service</title>
   <style>
     * {
       box-sizing: border-box;
@@ -168,7 +168,7 @@
 <body>
 
   <header>
-    <h1>Servicios Pro</h1>
+    <h1>You Services</h1>
     <button class="nav-btn active" onclick="goTo(0)">Inicio</button>
     <button class="nav-btn" onclick="goTo(1)">Publicar</button>
     <button class="nav-btn" onclick="goTo(2)">Perfil</button>
@@ -194,7 +194,7 @@
     <option value="marketing">Marketing</option>
   </select>
   <input type="number" id="precio" placeholder="Precio en USD" required />
-  <input type="file" id="archivo" accept="image/*,video/*" />
+  <input type="file" id="archivos" accept="image/*,video/*" multiple />
   <button type="submit">Publicar</button>
 </form>
     </section>
@@ -264,30 +264,41 @@ async function publicarServicio(e) {
   const descripcion = document.getElementById('descripcion').value;
   const categoria = document.getElementById('categoria').value;
   const precio = parseFloat(document.getElementById('precio').value);
-  const archivo = document.getElementById('archivo').files[0];
+  const archivos = document.getElementById('archivos').files;
 
-  let imagen_url = null;
+  let miniatura_url = null;
+  let multimedia = [];
 
-  if (archivo) {
+  for (let i = 0; i < archivos.length; i++) {
+    const archivo = archivos[i];
     const nombreArchivo = `${Date.now()}_${archivo.name}`;
     const { data, error } = await client.storage
       .from('Miniaturas')
       .upload(nombreArchivo, archivo);
 
     if (error) {
-      alert('Error al subir la imagen');
+      alert('Error al subir archivo');
       console.error(error);
       return;
     }
 
-    imagen_url = client.storage
+    const url = client.storage
       .from('Miniaturas')
       .getPublicUrl(nombreArchivo).data.publicUrl;
+
+    if (i === 0) {
+      miniatura_url = url; // primera imagen como miniatura
+    }
+
+    multimedia.push({
+      tipo: archivo.type.startsWith('video') ? 'video' : 'imagen',
+      url
+    });
   }
 
   const { error: insertError } = await client
     .from('servicios')
-    .insert([{ titulo, descripcion, categoria, precio, imagen_url }]);
+    .insert([{ titulo, descripcion, categoria, precio, miniatura_url, multimedia }]);
 
   if (insertError) {
     alert('Error al guardar el servicio');
@@ -312,14 +323,15 @@ async function cargarServicios() {
   data.forEach(servicio => {
     const card = document.createElement('div');
     card.className = 'card';
-card.innerHTML = `
-  <div onclick="verDetalle('${servicio.id}')" style="cursor:pointer">
-    ${servicio.imagen_url ? `<img src="${servicio.imagen_url}" class="thumbnail" />` : ''}
-    <h3>${servicio.titulo}</h3>
-    <p>${servicio.descripcion}</p>
-    <p><strong>Precio:</strong> $${servicio.precio}</p>
-  </div>
-`;
+    card.innerHTML = `
+      <div onclick="verDetalle('${servicio.id}')" style="cursor:pointer">
+        ${servicio.miniatura_url ? `<img src="${servicio.miniatura_url}" class="thumbnail" />` : ''}
+        <h3>${servicio.titulo}</h3>
+        <p>${servicio.descripcion}</p>
+        <p><strong>Precio:</strong> $${servicio.precio}</p>
+        <p><strong>Categoría:</strong> ${servicio.categoria}</p>
+      </div>
+    `;
     grid.appendChild(card);
   });
 }
