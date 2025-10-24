@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Detalle del Servicio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background-color: #0f1115; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+    .galeria img { max-width: 300px; margin: 10px; border-radius: 8px; }
+    .perfil { margin-top: 30px; border-top: 1px solid #2a2d33; padding-top: 20px; }
+    .perfil img { width: 80px; border-radius: 50%; }
+    .chat { margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <h1 id="titulo"></h1>
+  <p id="descripcion"></p>
+  <p><strong>Precio:</strong> $<span id="precio"></span></p>
+  <div class="galeria" id="galeria"></div>
+
+  <div class="perfil" id="perfil-vendedor">
+    <h3>Vendedor</h3>
+    <p id="nombre-vendedor"></p>
+    <img id="foto-vendedor" src="" alt="Foto del vendedor" />
+    <button onclick="iniciarChat()">Hablar con el vendedor</button>
+  </div>
+
+  <div class="chat" id="chat-box" style="display:none;">
+    <h3>Chat</h3>
+    <div id="mensajes"></div>
+    <input type="text" id="mensaje" placeholder="Escribe tu mensaje..." />
+    <button onclick="enviarMensaje()">Enviar</button>
+  </div>
+
+  <script>
+    const client = window.supabase.createClient(
+      'https://efbkdygonqsshvwjlcmx.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmYmtkeWdvbnFzc2h2d2psY214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTUxMTMsImV4cCI6MjA3Njg5MTExM30.ZpkLvS7A8tDHdYz5ICWzlO3gV34sPpZ-r7J80mdzTvY'
+    );
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    async function cargarDetalle() {
+      const { data: servicio, error } = await client
+        .from('servicios')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error al cargar servicio:', error);
+        return;
+      }
+
+      document.getElementById('titulo').textContent = servicio.titulo;
+      document.getElementById('descripcion').textContent = servicio.descripcion;
+      document.getElementById('precio').textContent = servicio.precio;
+
+      const galeria = document.getElementById('galeria');
+      if (servicio.imagen_url) {
+        const img = document.createElement('img');
+        img.src = servicio.imagen_url;
+        galeria.appendChild(img);
+      }
+
+      // Simulación de vendedor (puedes conectar con tabla real luego)
+      document.getElementById('nombre-vendedor').textContent = 'Yeicer';
+      document.getElementById('foto-vendedor').src = 'https://via.placeholder.com/80';
+    }
+
+    function iniciarChat() {
+      document.getElementById('chat-box').style.display = 'block';
+    }
+
+    function enviarMensaje() {
+      const mensaje = document.getElementById('mensaje').value;
+      const contenedor = document.getElementById('mensajes');
+      const nuevo = document.createElement('p');
+      nuevo.textContent = `Tú: ${mensaje}`;
+      contenedor.appendChild(nuevo);
+      document.getElementById('mensaje').value = '';
+    }
+
+    window.addEventListener('DOMContentLoaded', cargarDetalle);
+  </script>
+</body>
+</html>
