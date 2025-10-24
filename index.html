@@ -312,17 +312,22 @@ async function cargarServicios() {
   data.forEach(servicio => {
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = `
-      ${servicio.imagen_url ? `<img src="${servicio.imagen_url}" class="thumbnail" />` : ''}
-      <h3>${servicio.titulo}</h3>
-      <p>${servicio.descripcion}</p>
-      <p><strong>Precio:</strong> $${servicio.precio}</p>
-    `;
+card.innerHTML = `
+  <div onclick="verDetalle('${servicio.id}')" style="cursor:pointer">
+    ${servicio.imagen_url ? `<img src="${servicio.imagen_url}" class="thumbnail" />` : ''}
+    <h3>${servicio.titulo}</h3>
+    <p>${servicio.descripcion}</p>
+    <p><strong>Precio:</strong> $${servicio.precio}</p>
+  </div>
+`;
     grid.appendChild(card);
   });
 }
 
 window.addEventListener('DOMContentLoaded', cargarServicios);
+function verDetalle(id) {
+  window.location.href = `servicio.html?id=${id}`;
+}
 </script>
 
 </body>
