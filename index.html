@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Servicios Pro</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0f1115;
+      color: #e0e0e0;
+      overflow: hidden;
+      touch-action: pan-y;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #1a1d23;
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      z-index: 1000;
+      border-bottom: 1px solid #2a2d33;
+      gap: 15px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+
+    header::-webkit-scrollbar {
+      display: none;
+    }
+
+    header h1 {
+      color: #3b82f6;
+      font-size: 1.4em;
+      margin-right: 20px;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      padding: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      flex-shrink: 0;
+    }
+
+    .nav-btn.active {
+      color: #3b82f6;
+      border-bottom: 2px solid #3b82f6;
+    }
+
+    .content {
+      display: flex;
+      transition: transform 0.4s ease-in-out;
+      width: 300vw;
+      margin-top: 70px;
+      height: calc(100vh - 70px);
+      overflow: hidden;
+    }
+
+    section {
+      width: 100vw;
+      padding: 20px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    h2 {
+      color: #3b82f6;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background-color: #1a1d23;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #2a2d33;
+    }
+
+    .card img.thumbnail {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      object-fit: cover;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #3b82f6;
+    }
+
+    .form input, .form textarea, .form select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background-color: #2a2d33;
+      border: none;
+      border-radius: 5px;
+      color: #e0e0e0;
+    }
+
+    .form button {
+      background-color: #3b82f6;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .form button:hover {
+      background-color: #60a5fa;
+    }
+
+    .profile img {
+      width: 100px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+
+    .profile p {
+      margin: 5px 0;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .nav-btn {
+        font-size: 0.9em;
+        padding: 8px;
+      }
+
+      .content {
+        height: calc(100vh - 120px);
+        margin-top: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Servicios Pro</h1>
+    <button class="nav-btn active" onclick="goTo(0)">Inicio</button>
+    <button class="nav-btn" onclick="goTo(1)">Publicar</button>
+    <button class="nav-btn" onclick="goTo(2)">Perfil</button>
+  </header>
+
+  <div class="content" id="slider">
+    <!-- Inicio -->
+    <section>
+      <h2>Servicios disponibles</h2>
+<div class="grid" id="servicios-grid"></div>
+    </section>
+
+    <!-- Publicar -->
+    <section>
+      <h2>Publicar un nuevo servicio</h2>
+<form class="form" onsubmit="publicarServicio(event)">
+  <input type="text" id="titulo" placeholder="Título del servicio" required />
+  <textarea id="descripcion" placeholder="Descripción detallada" rows="4" required></textarea>
+  <select id="categoria" required>
+    <option value="">Categoría</option>
+    <option value="diseño">Diseño</option>
+    <option value="programación">Programación</option>
+    <option value="marketing">Marketing</option>
+  </select>
+  <input type="number" id="precio" placeholder="Precio en USD" required />
+  <input type="file" id="archivo" accept="image/*,video/*" />
+  <button type="submit">Publicar</button>
+</form>
+    </section>
+
+    <!-- Perfil -->
+    <section class="profile">
+      <h2>Tu Perfil</h2>
+      <img src="https://via.placeholder.com/100" alt="Foto de perfil" />
+      <p><strong>Nombre:</strong> Yeicer</p>
+      <p><strong>Servicios publicados:</strong> 3</p>
+      <p><strong>Reseñas recibidas:</strong> 37</p>
+    </section>
+  </div>
+
+  <script>
+    let currentIndex = 0;
+    const slider = document.getElementById('slider');
+    const totalSections = 3;
+
+    function goTo(index) {
+      currentIndex = index;
+      slider.style.transform = `translateX(-${index * 100}vw)`;
+      document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === index);
+      });
+    }
+
+    // Swipe detection (móvil y tablet)
+    let startX = 0;
+    let isTouching = false;
+
+    slider.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      isTouching = true;
+    });
+
+    slider.addEventListener('touchmove', (e) => {
+      if (!isTouching) return;
+      const currentX = e.touches[0].clientX;
+      const diff = startX - currentX;
+
+      if (Math.abs(diff) > 50) {
+        isTouching = false;
+        if (diff > 0 && currentIndex < totalSections - 1) {
+          goTo(currentIndex + 1);
+        } else if (diff < 0 && currentIndex > 0) {
+          goTo(currentIndex - 1);
+        }
+      }
+    });
+
+    slider.addEventListener('touchend', () => {
+      isTouching = false;
+    });
+  </script>
+
+<script>
+const client = window.supabase.createClient(
+  'https://efbkdygonqsshvwjlcmx.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmYmtkeWdvbnFzc2h2d2psY214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTUxMTMsImV4cCI6MjA3Njg5MTExM30.ZpkLvS7A8tDHdYz5ICWzlO3gV34sPpZ-r7J80mdzTvY'
+);
+
+async function publicarServicio(e) {
+  e.preventDefault();
+
+  const titulo = document.getElementById('titulo').value;
+  const descripcion = document.getElementById('descripcion').value;
+  const categoria = document.getElementById('categoria').value;
+  const precio = parseFloat(document.getElementById('precio').value);
+  const archivo = document.getElementById('archivo').files[0];
+
+  let imagen_url = null;
+
+  if (archivo) {
+    const nombreArchivo = `${Date.now()}_${archivo.name}`;
+    const { data, error } = await client.storage
+      .from('Miniaturas')
+      .upload(nombreArchivo, archivo);
+
+    if (error) {
+      alert('Error al subir la imagen');
+      console.error(error);
+      return;
+    }
+
+    imagen_url = client.storage
+      .from('Miniaturas')
+      .getPublicUrl(nombreArchivo).data.publicUrl;
+  }
+
+  const { error: insertError } = await client
+    .from('servicios')
+    .insert([{ titulo, descripcion, categoria, precio, imagen_url }]);
+
+  if (insertError) {
+    alert('Error al guardar el servicio');
+    console.error(insertError);
+  } else {
+    alert('Servicio publicado correctamente');
+    cargarServicios();
+  }
+}
+
+async function cargarServicios() {
+  const { data, error } = await client.from('servicios').select('*');
+
+  if (error) {
+    console.error('Error al cargar servicios:', error);
+    return;
+  }
+
+  const grid = document.getElementById('servicios-grid');
+  grid.innerHTML = '';
+
+  data.forEach(servicio => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      ${servicio.imagen_url ? `<img src="${servicio.imagen_url}" class="thumbnail" />` : ''}
+      <h3>${servicio.titulo}</h3>
+      <p>${servicio.descripcion}</p>
+      <p><strong>Precio:</strong> $${servicio.precio}</p>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', cargarServicios);
+</script>
+
+</body>
+</html>
